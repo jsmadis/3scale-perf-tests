@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 abstract class SharedLoadTestSimulation extends SharedSimulation {
 
   /* Constant users per second */
-  lazy val constantUsersPerSecond = 100
+  lazy val numberOfUsers = 100
 
   /**
     * Performs setup of the simulation.
@@ -24,10 +24,13 @@ abstract class SharedLoadTestSimulation extends SharedSimulation {
 
     setUp(
       theScenarioBuilder.inject(
-        constantUsersPerSec(constantUsersPerSecond) during(30 seconds)
+        constantUsersPerSec(numberOfUsers) during(1 minute)
       )
-    ).protocols(theHttpProtocolBuilder)
+    ).protocols(theHttpProtocolBuilder).assertions(
+        global.responseTime.mean.lt(250),
+        global.responseTime.percentile3.lt(500),
+        global.allRequests.count.gt(200)
+      )
   }
-
   doSetUp()
 }
